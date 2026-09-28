@@ -1,0 +1,104 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Chess Online</title>
+<style>
+:root{--bg:#0c0c0e;--pn:#161619;--ln:#2a2a2f;--tx:#e9e7e3;--mu:#8a8a92;--rd:#e5322d;--bs:min(calc(100vw - 16px),calc(100dvh - 200px),620px);box-sizing:border-box}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif;min-height:100dvh;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+button,input{font:inherit;color:inherit}button{background:var(--pn);border:1px solid var(--ln);border-radius:6px;padding:11px 16px;cursor:pointer;transition:.15s}
+button:hover{border-color:var(--rd)}button.p{background:var(--rd);border-color:var(--rd);color:#fff;font-weight:600}button:focus-visible,input:focus-visible{outline:2px solid var(--rd);outline-offset:2px}
+input{background:#0f0f12;border:1px solid var(--ln);border-radius:6px;padding:11px 14px;width:100%}
+[hidden]{display:none!important}.scr{max-width:1000px;margin:0 auto;padding:12px 8px}
+#home,#lobby{display:flex;flex-direction:column;align-items:center;gap:14px;padding-top:12vh;text-align:center}#home>*,#lobby>*{width:min(340px,100%)}
+h1{font-size:54px;letter-spacing:.18em;margin:0;font-weight:800}h1 i{color:var(--rd);font-style:normal}
+.st{color:var(--mu);font-size:13px}.st b{display:inline-block;width:8px;height:8px;border-radius:50%;background:#555;margin-right:6px}.st.on b{background:#3ecf6e;box-shadow:0 0 8px #3ecf6e}
+.row{display:flex;gap:8px}.code{font:700 34px ui-monospace,monospace;letter-spacing:.3em;color:var(--rd)}
+#game{display:grid;gap:10px;justify-content:center}@media(min-width:900px){#game{grid-template-columns:var(--bs) 300px;align-items:start}}
+.bar{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:var(--pn);border-bottom:2px solid transparent;border-radius:6px;width:var(--bs)}.bar.act{border-color:var(--rd)}
+.bar small{display:block;color:var(--mu);min-height:17px;font-size:14px}.clk{font:600 22px ui-monospace,monospace}
+#bd{display:grid;grid-template-columns:repeat(8,1fr);width:var(--bs);height:var(--bs);border-radius:4px;overflow:hidden;position:relative}
+.sq{display:flex;align-items:center;justify-content:center;position:relative;cursor:pointer;user-select:none}.l{background:#d5d0c6}.d{background:#6f6a63}
+.sq b{font:calc(var(--bs)/8*.8)/1 "Segoe UI Symbol","Noto Sans Symbols 2","Apple Symbols",serif;transition:transform .12s}
+.wh{color:#faf8f3;text-shadow:0 0 2px #000,0 0 1px #000,0 1px 2px #000}.bk{color:#111;text-shadow:0 0 1px #fff8}
+.lm::before{content:"";position:absolute;inset:0;background:#e5322d55}.sel::before{content:"";position:absolute;inset:0;background:#e5322dcc}
+.dst::after{content:"";width:28%;height:28%;border-radius:50%;background:#e5322dbb;position:absolute}.dst.cap::after{width:88%;height:88%;background:none;border:3px solid #e5322dcc}
+.chk{box-shadow:inset 0 0 0 3px var(--rd),inset 0 0 18px var(--rd)}
+.pn{background:var(--pn);border:1px solid var(--ln);border-radius:8px;padding:12px;display:grid;gap:10px;width:var(--bs)}@media(min-width:900px){.pn{width:auto}}
+#stt{font-weight:600}#mv{max-height:190px;overflow:auto;font:13px/1.7 ui-monospace,monospace;color:var(--mu)}#mv span{color:var(--tx)}
+details summary{cursor:pointer;color:var(--mu)}.btns{display:flex;gap:6px;flex-wrap:wrap}.btns button{flex:1;padding:9px 8px;font-size:14px}
+#rbi{border:1px solid var(--rd);border-radius:6px;padding:8px 10px;font-size:13px}#rbi .think{height:2px;background:linear-gradient(90deg,transparent,var(--rd),transparent);background-size:50% 100%;background-repeat:no-repeat;animation:sc 1s linear infinite}
+@keyframes sc{from{background-position:-50% 0}to{background-position:150% 0}}@media(max-width:600px){.dt{display:none}}@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+.ov{position:fixed;inset:0;background:#000b;backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;z-index:9}
+.md{background:#111114cc;border:1px solid var(--ln);border-radius:10px;padding:22px;width:min(340px,92vw);display:grid;gap:12px;text-align:center}
+#rb{position:fixed;right:10px;bottom:calc(10px + env(safe-area-inset-bottom));width:22px;height:22px;padding:0;border-radius:50%;opacity:.06;font-size:11px}#rb:hover,#rb:focus{opacity:.7}
+#toast{position:fixed;left:50%;top:14px;transform:translateX(-50%);background:var(--pn);border:1px solid var(--rd);padding:10px 16px;border-radius:6px;z-index:20;max-width:92vw}
+</style></head><body>
+<div id="home" class="scr"><h1>CHE<i>SS</i></h1><div class="st" id="cs"><b></b><span>Connecting…</span></div>
+<input id="nm" maxlength="16" placeholder="Your name" autocomplete="nickname"><button class="p" id="cr">Create room</button>
+<div class="row"><input id="ji" maxlength="8" placeholder="Room ID" autocapitalize="characters"><button id="jn">Join room</button></div></div>
+<div id="lobby" class="scr" hidden><div class="st">Room</div><div class="code" id="lc"></div><div class="st">Waiting for opponent…</div>
+<div class="row"><button id="c1">Copy room ID</button><button id="c2">Copy invite link</button></div><button id="lv0">Leave room</button></div>
+<div id="game" class="scr" hidden><div><div class="bar" id="tb"><div><span id="tn"></span><small id="tc"></small></div><div class="clk" id="tk"></div></div>
+<div id="bd" style="margin:8px 0"></div><div class="bar" id="bb"><div><span id="bn"></span><small id="bc"></small></div><div class="clk" id="bk"></div></div></div>
+<div class="pn"><div id="stt"></div><div id="rbi" hidden></div><details id="hd"><summary>Move history</summary><div id="mv"></div></details>
+<div class="btns" id="ab"></div></div></div>
+<div class="ov" id="pr" hidden><div class="md">Promote to<div class="btns"><button data-p="q">Queen</button><button data-p="r">Rook</button><button data-p="b">Bishop</button><button data-p="n">Knight</button></div></div></div>
+<button id="rb" aria-label="Menu">·</button>
+<div class="ov" id="rm" hidden><div class="md"><div style="letter-spacing:.2em;font-weight:700">[ ROBOT CORE ]</div><div id="rs" class="st">STATUS: LOCKED</div>
+<div id="rl" style="display:grid;gap:10px"><div class="st">PASSWORD REQUIRED</div><input id="rp" type="password" placeholder="********" autocomplete="off"><button class="p" id="ru">Unlock</button></div>
+<div id="ra" style="display:grid;gap:10px" hidden><div>ROBOT CORE UNLOCKED</div><div class="st">OPTIMAL ENGINE MODE · STOCKFISH</div><button class="p" id="rg">Activate robot</button></div>
+<div id="re" style="color:var(--rd);min-height:18px"></div><button id="rx">Close</button></div></div>
+<div id="toast" hidden></div>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+const $=s=>document.querySelector(s),sk=io(),G={p:'♟',n:'♞',b:'♝',r:'♜',q:'♛',k:'♚'},V='\uFE0E';
+let me={id:null,c:null},S=null,sel=null,PM={},rx=Date.now(),mv0=null;
+const load=()=>{try{return JSON.parse(localStorage.getItem('cs'))}catch{return null}};
+const show=id=>['home','lobby','game'].forEach(x=>$('#'+x).hidden=x!==id);
+const toast=t=>{const e=$('#toast');e.textContent=t;e.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>e.hidden=true,3500)};
+const name=()=>$('#nm').value.trim()||localStorage.getItem('cn')||'Player';
+const rp=new URLSearchParams(location.search).get('r');if(rp)$('#ji').value=rp.toUpperCase();
+$('#nm').value=localStorage.getItem('cn')||'';$('#nm').onchange=()=>localStorage.setItem('cn',$('#nm').value.trim());
+sk.on('connect',()=>{$('#cs').className='st on';$('#cs span').textContent='Online';const l=load();if(l)sk.emit('join',{room:l.id,tok:l.tok,name:name()})});
+sk.on('disconnect',()=>{$('#cs').className='st';$('#cs span').textContent='Connection lost. Reconnecting…';toast('Connection lost. Reconnecting…')});
+sk.on('joined',d=>{me=d;localStorage.setItem('cs',JSON.stringify({id:d.id,tok:d.tok}));$('#lc').textContent=d.id;history.replaceState(0,'','/')});
+sk.on('err',t=>{toast(t);if(t==='Invalid Room ID'||t==='You are not in a game'){localStorage.removeItem('cs')}});
+sk.on('note',toast);sk.on('rerr',t=>$('#re').textContent=t);
+sk.on('unlocked',()=>{$('#rl').hidden=true;$('#ra').hidden=false;$('#rs').textContent='STATUS: UNLOCKED';$('#re').textContent=''});
+sk.on('state',d=>{S=d;rx=Date.now();sel=null;if(!S.players[me.c]&&me.c){leaveLocal();return}
+ show(S.players.w&&S.players.b||S.hist.length?'game':'lobby');if(S.players[me.c]?.robot)$('#rm').hidden=true;render()});
+function leaveLocal(){localStorage.removeItem('cs');me={id:null,c:null};S=null;show('home')}
+$('#cr').onclick=()=>{localStorage.setItem('cn',name());sk.emit('create',{name:name()})};
+$('#jn').onclick=()=>{localStorage.setItem('cn',name());sk.emit('join',{room:$('#ji').value.trim(),name:name()})};
+$('#lv0').onclick=()=>{sk.emit('leave');leaveLocal()};
+const cp=t=>navigator.clipboard.writeText(t).then(()=>toast('Copied'),()=>toast(t));
+$('#c1').onclick=()=>cp(me.id);$('#c2').onclick=()=>cp(location.origin+'/?r='+me.id);
+const mine=()=>S&&!S.res&&S.players.w&&S.players.b&&S.turn===me.c&&!S.players[me.c].robot;
+function render(){
+ const flip=me.c==='b',pos=S.fen.split(' ')[0].split('/').map(r=>r.replace(/\d/g,n=>'.'.repeat(n)));PM={};let h='';
+ for(let i=0;i<64;i++){const R=flip?7-(i>>3):i>>3,F=flip?7-(i&7):i&7,q='abcdefgh'[F]+(8-R),p=pos[R][F];if(p!=='.')PM[q]=p;
+  const dst=mine()&&sel&&S.dests[sel]?.includes(q);
+  h+=`<div class="sq ${(R+F)%2?'d':'l'}${sel===q?' sel':''}${S.last?.includes(q)?' lm':''}${S.chk&&p===(S.turn==='w'?'K':'k')?' chk':''}${dst?' dst'+(p!=='.'?' cap':''):''}" data-s="${q}">${p!=='.'?`<b class="${p===p.toLowerCase()?'bk':'wh'}">${G[p.toLowerCase()]+V}</b>`:''}</div>`}
+ $('#bd').innerHTML=h;
+ const o=me.c==='w'?'b':'w',side=(c,n,cc,cl,bar)=>{const p=S.players[c];$('#'+n).innerHTML=p?`${p.name}${p.robot?' ⚙':''} <span style="color:${p.on?'#3ecf6e':'#e5322d'}">●</span>${!p.on?' <small style="display:inline">offline</small>':''}`:'Waiting…';
+  $('#'+cc).innerHTML=(S.cap[c]||[]).map(x=>`<span class="${c==='w'?'bk':'wh'}">${G[x]+V}</span>`).join('');$('#'+bar).classList.toggle('act',!S.res&&S.turn===c&&!!S.players.w&&!!S.players.b)};
+ side(o,'tn','tc','tk','tb');side(me.c,'bn','bc','bk','bb');
+ $('#stt').textContent=S.res?`${S.res.why}. ${S.res.win?(S.res.win==='w'?'White':'Black')+' wins':'Draw'}`:!S.players.w||!S.players.b?'Waiting for opponent…':(S.players[S.turn].robot?'Robot to move':(S.turn==='w'?'White':'Black')+' to move')+(S.chk?' · Check':'');
+ let m='';for(let i=0;i<S.hist.length;i+=2)m+=`${i/2+1}. <span>${S.hist[i]}</span> <span>${S.hist[i+1]||''}</span><br>`;$('#mv').innerHTML=m;$('#mv').scrollTop=1e5;
+ const rb=S.players.w?.robot||S.players.b?.robot,ri=$('#rbi');ri.hidden=!rb;
+ if(rb)ri.innerHTML=`<b>ROBOT</b> <span style="color:#3ecf6e">● ONLINE</span> · OPTIMAL ENGINE MODE<br>${S.rb?.think?'ANALYZING POSITION…<div class="think"></div>':'IDLE'}<span class="dt"><br>ENGINE: STOCKFISH · DEPTH ${S.ev?.d??'–'} · EVAL ${S.ev?.s??'–'}</span>`;
+ const b=[];if(S.res)b.push(['New game','newgame','p']);else{b.push(['Resign','resign']);
+  if(S.draw&&S.draw!==me.c){b.push(['Accept draw','draw','p']);b.push(['Decline','nodraw'])}else b.push([S.draw===me.c?'Draw offered':'Offer draw','draw'])}
+ b.push(['Leave','leave']);$('#ab').innerHTML=b.map(x=>`<button data-a="${x[1]}" class="${x[2]||''}">${x[0]}</button>`).join('');
+ if(innerWidth>=900)$('#hd').open=true;tickClk()}
+function tickClk(){if(!S)return;const act=!S.res&&S.hist.length&&S.players.w&&S.players.b,f=ms=>{ms=Math.max(0,ms);const s=Math.ceil(ms/1000);return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')},e=Date.now()-rx,o=me.c==='w'?'b':'w';
+ $('#tk').textContent=f(S.clk[o]-(act&&S.turn===o?e:0));$('#bk').textContent=f(S.clk[me.c]-(act&&S.turn===me.c?e:0))}
+setInterval(tickClk,200);
+$('#ab').onclick=e=>{const a=e.target.dataset.a;if(!a)return;if(a==='leave'){sk.emit('leave');leaveLocal()}else sk.emit(a)};
+$('#bd').onclick=e=>{const q=e.target.closest('.sq')?.dataset.s;if(!q||!mine())return;
+ if(sel&&S.dests[sel]?.includes(q)){const p=PM[sel];if((p==='P'&&q[1]==='8')||(p==='p'&&q[1]==='1')){mv0=[sel,q];$('#pr').hidden=false;return}sk.emit('move',{from:sel,to:q});sel=null}
+ else sel=S.dests[q]?q:null;render()};
+$('#pr').onclick=e=>{const p=e.target.dataset.p;if(!p)return;$('#pr').hidden=true;sk.emit('move',{from:mv0[0],to:mv0[1],promotion:p});sel=null};
+// hidden robot panel
+$('#rb').onclick=()=>{$('#rm').hidden=false;$('#re').textContent='';$('#rp').focus()};$('#rx').onclick=()=>$('#rm').hidden=true;
+$('#ru').onclick=()=>{$('#re').textContent='';sk.emit('unlock',$('#rp').value);$('#rp').value=''};$('#rp').onkeydown=e=>{if(e.key==='Enter')$('#ru').click()};
+$('#rg').onclick=()=>sk.emit('robot');
+</script></body></html>

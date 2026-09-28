@@ -1,0 +1,1 @@
+{"name":"chess-online","version":"1.0.0","private":true,"scripts":{"start":"node server.js"},"engines":{"node":">=18"},"dependencies":{"chess.js":"^1.0.0","express":"^4.19.2","socket.io":"^4.7.5"}}
